@@ -3,14 +3,20 @@ package com.github.eduardojads.ms_pagamento.service;
 import com.github.eduardojads.ms_pagamento.dto.PagamentoDTO;
 import com.github.eduardojads.ms_pagamento.entity.Pagamento;
 import com.github.eduardojads.ms_pagamento.entity.Status;
+import com.github.eduardojads.ms_pagamento.http.PedidoClient;
 import com.github.eduardojads.ms_pagamento.repository.PagamentoRepository;
+import com.github.eduardojads.ms_pagamento.service.exceptions.DatabaseException;
 import com.github.eduardojads.ms_pagamento.service.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
+import org.hibernate.dialect.Database;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,6 +24,9 @@ public class PagamentoService {
 
     @Autowired
     private PagamentoRepository repository;
+
+    @Autowired
+    private PedidoClient pedidoClient;
 
     @Transactional(readOnly = true)
     public List<PagamentoDTO> getAll(){
@@ -56,12 +65,30 @@ public class PagamentoService {
         }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.SUPPORTS)
     public void deletePagamento(Long id){
         if(!repository.existsById(id)){
             throw new ResourceNotFoundException("Recurso não encontrado. ID: " + id);
         }
         repository.deleteById(id);
+
+        try{
+            repository.deleteById(id);
+        }catch (DataIntegrityViolationException e ){
+            throw new DatabaseException("Falha na integridade referencial");
+        }
+    }
+
+    @Transactional
+    public void confirmarPagamentoDoPedido(Long id){
+        Optional<Pagamento> pagamento = repository.findById(id);
+        if (pagamento.isEmpty()){
+            throw new ResourceNotFoundException("Recurso não encontrado. ID: " + id);
+        }
+
+        pagamento.get().setStatus(Status.CONFIRMADO);
+        repository.save(pagamento.get());
+        pedidoClient.atualizarPagamentoDoPedido(pagamento.get().getPedidoId());
     }
 
     private void copyDtoToEntity(PagamentoDTO dto, Pagamento entity) {
