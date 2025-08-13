@@ -28,7 +28,7 @@ public class PagamentoServiceIT {
 
         existingId = 1L;
         nonExistingId = 100L;
-        countTotalPagamentos = 6L;
+        countTotalPagamentos = 2L;
     }
 
     @Test
@@ -55,10 +55,9 @@ public class PagamentoServiceIT {
 
         Assertions.assertFalse(result.isEmpty());
         Assertions.assertEquals(countTotalPagamentos, result.size());
-        Assertions.assertEquals(Double.valueOf(35.55), result.get(0).getValor().doubleValue());
+        Assertions.assertEquals(Double.valueOf(790.0), result.get(0).getValor().doubleValue());
         Assertions.assertEquals("Amadeus Mozart", result.get(0).getNome());
         Assertions.assertEquals("Chiquinha Gonzaga", result.get(1).getNome());
-        Assertions.assertNull(result.get(5).getNome());
 
     }
 

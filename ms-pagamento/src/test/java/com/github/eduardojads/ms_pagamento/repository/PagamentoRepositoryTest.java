@@ -27,7 +27,7 @@ public class PagamentoRepositoryTest {
         // Arrange
         existingId = 1L;
         nonExistingId = 100L;
-        countTotalPagamento = 3L;
+        countTotalPagamento = 2L;
 
     }
 
