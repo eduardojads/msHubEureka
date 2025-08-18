@@ -2,6 +2,7 @@ package com.github.eduardojads.ms_pedido.controller;
 
 import com.github.eduardojads.ms_pedido.dto.PedidoDTO;
 import com.github.eduardojads.ms_pedido.dto.StatusDTO;
+import com.github.eduardojads.ms_pedido.kafka.PedidoProducer;
 import com.github.eduardojads.ms_pedido.service.PedidoService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +21,9 @@ public class PedidoController {
 
     @Autowired
     private PedidoService service;
+
+    @Autowired
+    private PedidoProducer pedidoProducer;
 
 
     @GetMapping("/port")
@@ -52,6 +56,13 @@ public class PedidoController {
                 .buildAndExpand(dto.getId())
                 .toUri();
         return ResponseEntity.created(uri).body(dto);
+    }
+
+    @PostMapping("/enviar")
+    public ResponseEntity<String> enviarMensagem (@RequestParam String mensagem){
+
+        pedidoProducer.enviarMensagem(mensagem);
+        return ResponseEntity.ok("Mensagem enviada para o Kafka; " + mensagem);
     }
 
     @PutMapping("/{id}")
