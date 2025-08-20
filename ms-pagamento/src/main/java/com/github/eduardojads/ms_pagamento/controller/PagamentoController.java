@@ -1,6 +1,7 @@
 package com.github.eduardojads.ms_pagamento.controller;
 
 import com.github.eduardojads.ms_pagamento.dto.PagamentoDTO;
+import com.github.eduardojads.ms_pagamento.kafka.PagamentoPendenteProducer;
 import com.github.eduardojads.ms_pagamento.service.PagamentoService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.validation.Valid;
@@ -19,6 +20,10 @@ public class PagamentoController {
 
     @Autowired
     private PagamentoService service;
+
+    @Autowired
+    private PagamentoPendenteProducer pagamentoPendenteProducer;
+
 
     @GetMapping
     public ResponseEntity<List<PagamentoDTO>> getAll(){
@@ -60,6 +65,8 @@ public class PagamentoController {
 
     public void confirmacaoPagamentoPendente (Long id, Exception e){
         service.alterarStatusDoPagamento(id);
+
+        pagamentoPendenteProducer.enviarPAgamentoPendente((id.toString()));
     }
 
     @DeleteMapping("/{id}")
